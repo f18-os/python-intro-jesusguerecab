@@ -10,8 +10,12 @@ inText = inFile.read()
 outFile = open(outFileName,'w')
 
 #Remove punctuations from input text
+
 for punc in string.punctuation:
-    inText = inText.replace(punc,'')
+    if punc == '\'':
+        inText = inText.replace(punc,'')
+    else:
+        inText = inText.replace(punc,' ')
 
 inText = inText.lower()
 

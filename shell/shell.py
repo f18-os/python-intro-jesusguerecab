@@ -3,9 +3,9 @@
 
 import os, sys, time, re
 
-def parse(input):
-    args = input.split()
-    if '>' in input:
+def parse(uinput):
+    args = uinput.split()
+    if '>' in uinput:
         os.close(1)
         sys.stdout = open(args[args.index('>')+1],'w')
         fd = sys.stdout.fileno()
@@ -17,9 +17,20 @@ def parse(input):
         execute(args)
 
 def execute(args):
-    os.execve(args[0],args,os.environ)
-
-def main(input):
+    #try to execute with given directory
+    try:
+        os.execve(args[0],args,os.environ)
+    except FileNotFoundError:
+        pass
+    #try to execute with directories in PATH
+    for dir in re.split(":", os.environ['PATH']):
+        program = "%s/%s" % (dir, args[0])
+        try:
+            os.execve(program, args, os.environ)
+        except FileNotFoundError:  
+            pass 
+        
+def main(uinput):
     rc = os.fork()
 
     if rc < 0:
@@ -27,7 +38,7 @@ def main(input):
         sys.exit(1)
 
     elif rc == 0:
-        parse(input)
+        parse(uinput)
         os.write(2, ("Child: Could not exec %s\n" % args[0]).encode())
         sys.exit(1)
 
@@ -37,7 +48,9 @@ def main(input):
 #----------MAIN----------
 pid = os.getpid()
 
-input = input("$")
-#args = input.split()
+user_input = input("$")
 
-main(input)
+while 'exit' not in user_input:
+    main(user_input)
+
+    user_input = input("$")

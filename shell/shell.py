@@ -5,14 +5,29 @@ import os, sys, time, re
 
 def parse(uinput):
     args = uinput.split()
+    for arg in args:
+        if '$' in arg:
+            arg = arg.replace("$","")
+            try:
+                uinput = uinput.replace(arg,os.environ[arg])
+            except KeyError:
+                os.write(2, ("Key Error: %s" % arg).encode())
+    args = uinput.split()
     if '>' in uinput:
         os.close(1)
         sys.stdout = open(args[args.index('>')+1],'w')
         fd = sys.stdout.fileno()
         os.set_inheritable(fd,True)
-        
-        execute                 
-
+              
+        execute(args[:args.index('>')])
+    elif '=' in uinput:
+        uinput = uinput.replace(" ","")
+        args = uinput.split("=")
+        os.environ[args[0]] = args[1]
+        #print(os.environ['a'])
+        sys.exit(1)
+    elif 'cd' in uinput:
+        os.chdir(args[1])
     else:
         execute(args)
 
@@ -28,9 +43,9 @@ def execute(args):
         try:
             os.execve(program, args, os.environ)
         except FileNotFoundError:  
-            pass 
+            pass
         
-def main(uinput):
+def fork(uinput):
     rc = os.fork()
 
     if rc < 0:
@@ -39,7 +54,7 @@ def main(uinput):
 
     elif rc == 0:
         parse(uinput)
-        os.write(2, ("Child: Could not exec %s\n" % args[0]).encode())
+        os.write(2, ("Child: Could not exec %s\n" % uinput.split()[0]).encode())
         sys.exit(1)
 
     else:                           # parent (forked ok)
@@ -50,7 +65,9 @@ pid = os.getpid()
 
 user_input = input("$")
 
+os.environ['a'] = "2"
+
 while 'exit' not in user_input:
-    main(user_input)
+    fork(user_input)
 
     user_input = input("$")

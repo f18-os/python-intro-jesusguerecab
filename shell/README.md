@@ -15,7 +15,7 @@ The code asks for an input:
 This lab contains the following files:
  * shell.py: the shell code
 
-To compile and run:
+To run:
 ~~~
 $ ./shell.py
 ~~~
@@ -38,4 +38,4 @@ $ pwd
 ~~~
 
 # Known Errors #
-Cannot do both redirects, change directory, and change environmental variables at the same time
+Cannot do redirects, change directory, and change environmental variables at the same time

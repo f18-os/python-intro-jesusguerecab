@@ -5,36 +5,45 @@ import os, sys, time, re
 
 def parse(uinput):
     args = uinput.split()
+    
     #Checks for environmental variables $
     for arg in args:
         if '$' in arg:
             arg = arg.replace("$","")
             try:
-                uinput = uinput.replace(arg,os.environ[arg])
+                uinput = uinput.replace('$' + arg,os.environ[arg])
             except KeyError:
-                os.write(2, ("Key Error: %s" % arg).encode())
+                return
+                #os.write(2, ("Key Error: %s" % arg).encode())
     args = uinput.split()
 
+    if uinput is "":
+        return
     #Handles output redirect
-    if '>' in uinput:
+    elif '>' in uinput:
         os.close(1)
         sys.stdout = open(args[args.index('>')+1],'w')
         fd = sys.stdout.fileno()
-        os.set_inheritable(fd,True)
-              
+        os.set_inheritable(fd,True)      
         execute(args[:args.index('>')])
 
+    #Handles input redirect
+    elif '>' in uinput:
+        sys.stdin = open(args[args.index('>')+1],'r')
+        execute(args[:args.index('>')])
+        
     #Handles changing environmental variables
     elif '=' in uinput:
         uinput = uinput.replace(" ","")
         args = uinput.split("=")
         os.environ[args[0]] = args[1]
         #print(os.environ['a'])
-        sys.exit(1)
+        return
 
     #Handles directory change
     elif 'cd' in uinput:
         os.chdir(args[1])
+    #Defaul
     else:
         execute(args)
 
@@ -68,10 +77,16 @@ def execute(args):
 #----------MAIN----------
 pid = os.getpid()
 
-user_input = input("$")
+pr,pw = os.pipe()
+for f in (pr, pw):
+    os.set_inheritable(f, True)
+    print("pipe fds: pr=%d, pw=%d" % (pr, pw))
 
-os.environ['a'] = "2"
+user_input = ""
 
 while 'exit' not in user_input:
     parse(user_input)
-    user_input = input("$")
+    try:
+        user_input = input(os.environ['PS1'])
+    except KeyError:
+        user_input = input('$ ')

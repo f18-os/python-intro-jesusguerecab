@@ -35,6 +35,9 @@ shell.py
 $ cd /
 $ pwd
 /
+$ PS1="$$ "
+$$ echo $PS1
+$$
 ~~~
 
 # Known Errors #

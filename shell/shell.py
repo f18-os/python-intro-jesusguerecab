@@ -34,7 +34,7 @@ def parse(uinput):
         execute(args)
     #Handle pipes
     elif '|' in uinput:
-        pass
+        os.system(uinput)
     #Default
     else:
         execute(args)
